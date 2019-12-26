@@ -9,11 +9,11 @@ import (
 
 	"github.com/jordan-wright/email"
 
-	"github.com/pinggg/pingd"
-	"github.com/pinggg/pingd/io/http"
-	"github.com/pinggg/pingd/io/mail"
-	"github.com/pinggg/pingd/io/std"
-	"github.com/pinggg/pingd/ping"
+	"github.com/weaming/pingd"
+	"github.com/weaming/pingd/io/http"
+	"github.com/weaming/pingd/io/mail"
+	"github.com/weaming/pingd/io/std"
+	"github.com/weaming/pingd/ping"
 )
 
 // See flags

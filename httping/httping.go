@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// Timeout sets the ping timeout in milliseconds
+// Timeout sets the ping timeout in seconds
 var TimeOut = 5 * time.Second
 
 // Ping sends a HEAD command to a given URL, returns whether the host answers 200 or not

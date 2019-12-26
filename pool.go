@@ -90,7 +90,7 @@ func (p *Pool) run(startHostCh, stopHostCh <-chan HostStatus, notifyCh chan<- Ho
 				}(p.list[h.Host])
 			}
 
-			// STOP
+		// STOP
 		case h := <-stopHostCh:
 
 			if _, exists := p.list[h.Host]; exists {

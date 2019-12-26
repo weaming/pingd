@@ -14,7 +14,7 @@ import (
 )
 
 // Timeout sets the ping timeout in milliseconds
-var TimeOut = 3000 * time.Millisecond
+var TimeOut = 5000 * time.Millisecond
 
 // Ping sends a ping command to a given host, returns whether is host answers or not
 func Ping(host string) (up bool, err error) {

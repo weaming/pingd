@@ -6,9 +6,9 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/pinggg/pingd"
-	"github.com/pinggg/pingd/io/redis"
-	"github.com/pinggg/pingd/ping"
+	"github.com/weaming/pingd"
+	"github.com/weaming/pingd/io/redis"
+	"github.com/weaming/pingd/ping"
 )
 
 // See flags

@@ -10,7 +10,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 
-	"github.com/pinggg/pingd"
+	"github.com/weaming/pingd"
 )
 
 const (

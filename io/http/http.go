@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/pinggg/pingd"
+	"github.com/weaming/pingd"
 )
 
 type pingHTTP struct {
