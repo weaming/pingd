@@ -2,6 +2,7 @@
 package redisHub
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,8 +10,9 @@ import (
 
 	"time"
 
+	"github.com/garyburd/redigo/redis"
 	"github.com/weaming/pingd"
-	"github.com/weaming/pingd/io/redis"
+	ioRedis "github.com/weaming/pingd/io/redis"
 	"github.com/weaming/pingd/ping"
 )
 
@@ -30,21 +32,50 @@ func (p pingHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if host == "status" {
+		p.serveStatus(w, r)
+		return
+	}
+
 	err := checkDNS(host)
 	if err != nil {
 		fmt.Fprint(w, err.Error())
 		return
 	}
 
-	connKV := redis.NewRedisConn(p.redisAddr, p.redisDB, "servehttp")
+	connKV := ioRedis.NewRedisConn(p.redisAddr, p.redisDB, "servehttp")
 	switch r.Method {
 	case "DELETE":
 		fmt.Fprintf(w, "stop ping %s\n", host)
-		redis.StopRedisHost(connKV, p.listKey, host, p.stopCh)
+		ioRedis.StopRedisHost(connKV, p.listKey, host, p.stopCh)
 	default:
 		fmt.Fprintf(w, "start ping %s\n", host)
-		redis.StartRedisHost(connKV, p.listKey, host, p.startCh)
+		ioRedis.StartRedisHost(connKV, p.listKey, host, p.startCh)
 	}
+}
+
+func (p pingHTTP) serveStatus(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	conn := ioRedis.NewRedisConn(p.redisAddr, p.redisDB, "status")
+
+	hosts, err := redis.Strings(conn.Do("SMEMBERS", p.listKey))
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	statuses := []pingd.HostStatus{}
+	for _, host := range hosts {
+		var down bool
+		status, err := redis.String(conn.Do("GET", "status-"+host))
+		if err != nil {
+			log.Println("ERROR loading status of " + host + ". Assuming UP")
+		}
+		if status == downStatus {
+			down = true
+		}
+		statuses = append(statuses, pingd.HostStatus{Host: host, Down: down})
+	}
+	json.NewEncoder(w).Encode(map[string]interface{}{"data": statuses})
 }
 
 // NewReceiverFunc returns the functions with sets up the system channels
@@ -52,7 +83,7 @@ func (p pingHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func NewReceiverFunc(listen string, redisAddr string, redisDB int, startKey, stopKey, listKey string) pingd.Receiver {
 	return func(startCh, stopCh chan<- pingd.HostStatus) {
 		// redis receiver
-		redisReceiver := redis.NewReceiverFunc(redisAddr, redisDB, startKey, stopKey, listKey)
+		redisReceiver := ioRedis.NewReceiverFunc(redisAddr, redisDB, startKey, stopKey, listKey)
 		go redisReceiver(startCh, stopCh)
 
 		// http receiver
