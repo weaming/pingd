@@ -1,0 +1,14 @@
+version: "3"
+services:
+  web:
+    build: .
+    ports:
+      - "80:8080"
+    depends_on:
+      - redis
+    command: ["/app/app", "-redis", "redis:6379"]
+  redis:
+    image: "redis:alpine"
+    volumes:
+      - "$HOME/data/redis/pingd:/data"
+    command: ["redis-server", "--appendonly", "yes"]

@@ -28,7 +28,7 @@ func main() {
 	flag.IntVar(&failLimit, "failLimit", 6, "number failed ping attempts in a row to consider host down")
 	flag.DurationVar(&interval, "interval", 10*time.Second, "seconds between each ping")
 	flag.DurationVar(&ping.TimeOut, "timeOut", 5*time.Second, "seconds for single ping timeout")
-	flag.StringVar(&listenAddr, "listen", ":7700", "webserver listen address")
+	flag.StringVar(&listenAddr, "listen", ":8080", "webserver listen address")
 	flag.StringVar(&hubTopicPrefix, "hubTopic", "admin/ping", "Topic for https://hub.drink.cafe")
 	flag.Parse()
 
