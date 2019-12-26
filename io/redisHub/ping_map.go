@@ -45,6 +45,9 @@ func (p PingMap) Ping(host string) (up bool, err error) {
 
 func PingHTTP(host string, timeout time.Duration) (up bool, err error) {
 	resp, err := NewHTTPClient(timeout).Get(host)
+	if err != nil {
+		return false, err
+	}
 	if resp.StatusCode < 500 {
 		return true, err
 	} else {
@@ -91,13 +94,9 @@ func NewHTTPClient(timeout time.Duration) *http.Client {
 	// https://golang.org/src/net/http/transport.go
 
 	tr := &http.Transport{
-		// MaxIdleConnsPerHost, if non-zero, controls the maximum idle (keep-alive) connections to keep per-host.
-		// If zero, DefaultMaxIdleConnsPerHost is used, whose value is 2.
-		MaxIdleConnsPerHost: 1024,
-		// MaxIdleConns controls the maximum number of idle (keep-alive) connections across all hosts.
-		// Zero means no limit.
-		MaxIdleConns:    1000,
-		IdleConnTimeout: 60 * time.Second,
+		MaxIdleConnsPerHost: 1000,
+		MaxIdleConns:        1000,
+		IdleConnTimeout:     60 * time.Second,
 	}
 	return &http.Client{
 		Transport: tr,

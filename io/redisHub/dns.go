@@ -52,11 +52,11 @@ func checkDNS(host string) error {
 	json.NewDecoder(resp.Body).Decode(&d)
 	for _, x := range d.Answer {
 		if validIP4(x.Data) {
-			log.Printf("got DNS for %s host %s\n", x.Data, host)
+			log.Printf("got DNS %s for host %s\n", x.Data, host)
 			return nil
 		}
 	}
-	return fmt.Errorf("DNS with type A for host %s has not been found through 1.1.1.1", host)
+	return fmt.Errorf("DNS with type A for host %s has not been found through 1.1.1.1\n", host)
 }
 
 func validIP4(ipAddress string) bool {
