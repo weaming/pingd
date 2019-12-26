@@ -53,7 +53,7 @@ func (m *Monitor) Start(interval time.Duration, failLimit int) {
 	defer ticker.Stop()
 
 	for _ = range ticker.C {
-		// log.Println("tick")
+		// log.Println("tick", m.host)
 		m.lock.Lock()
 		if m.stop {
 			return

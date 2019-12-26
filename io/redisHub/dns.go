@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 )
@@ -31,17 +32,19 @@ type DNSResponse struct {
 
 var dnsClient = NewHTTPClient(10)
 
-func cleanHost(host string) string {
-	if strings.HasPrefix(strings.ToLower(host), "http") {
-		host = strings.TrimPrefix(host, "https://")
-		host = strings.TrimPrefix(host, "http://")
-		return strings.Split(host, "/")[0]
+func ParseSchemeHostname(host string) (string, string, error) {
+	if strings.Contains(host, "://") {
+		u, err := url.Parse(host)
+		if err != nil {
+			log.Printf("parse url failed: %s\n", err)
+			return "", host, err
+		}
+		return u.Scheme, u.Hostname(), nil
 	}
-	return host
+	return "", host, nil
 }
 
 func checkDNS(host string) error {
-	host = cleanHost(host)
 	url := fmt.Sprintf("https://cloudflare-dns.com/dns-query?type=A&name=%s", host)
 
 	req, err := http.NewRequest("GET", url, nil)

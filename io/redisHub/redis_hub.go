@@ -36,7 +36,8 @@ func NewNotifierFunc(redisAddr string, redisDB int, upKey, downKey, topicPrefix 
 				case true:
 					log.Println("DOWN " + h.Host)
 					conn.Send("PUBLISH", downKey, fmt.Sprintf("%s %s", h.Host, h.Reason))
-					conn.Send("SET", "status-"+h.Host, downStatus)
+					conn.Send("SET", redis.StatusPrefix+h.Host, downStatus)
+					conn.Send("BGSAVE")
 					conn.Flush()
 
 					// hub
@@ -45,7 +46,8 @@ func NewNotifierFunc(redisAddr string, redisDB int, upKey, downKey, topicPrefix 
 				case false:
 					log.Println("UP " + h.Host)
 					conn.Send("PUBLISH", upKey, h.Host)
-					conn.Send("SET", "status-"+h.Host, upStatus)
+					conn.Send("SET", redis.StatusPrefix+h.Host, upStatus)
+					conn.Send("BGSAVE")
 					conn.Flush()
 
 					// hub

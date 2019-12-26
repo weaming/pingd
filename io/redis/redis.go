@@ -19,7 +19,8 @@ const (
 	// when receiving host on the start channel
 	// they can be requested to start as "down"
 	// adding it at the end eg "example.com down"
-	downSuffix = " down"
+	downSuffix   = " down"
+	StatusPrefix = "status-"
 )
 
 func StartRedisHost(connKV redis.Conn, listKey, host string, startHostCh chan<- pingd.HostStatus) {
@@ -114,13 +115,13 @@ func NewNotifierFunc(redisAddr string, redisDB int, upKey, downKey string) pingd
 				case true:
 					log.Println("DOWN " + h.Host)
 					conn.Send("PUBLISH", downKey, fmt.Sprintf("%s %s", h.Host, h.Reason))
-					conn.Send("SET", "status-"+h.Host, downStatus)
+					conn.Send("SET", StatusPrefix+h.Host, downStatus)
 					conn.Flush()
 				// UP
 				case false:
 					log.Println("UP " + h.Host)
 					conn.Send("PUBLISH", upKey, h.Host)
-					conn.Send("SET", "status-"+h.Host, upStatus)
+					conn.Send("SET", StatusPrefix+h.Host, upStatus)
 					conn.Flush()
 				}
 			}
@@ -137,7 +138,7 @@ func LoadStatus(conn redis.Conn, redisKey string) []pingd.HostStatus {
 	statuses := []pingd.HostStatus{}
 	for _, host := range hosts {
 		var down bool
-		status, err := redis.String(conn.Do("GET", "status-"+host))
+		status, err := redis.String(conn.Do("GET", StatusPrefix+host))
 		if err != nil {
 			log.Println("ERROR loading status of " + host + ". Assuming UP")
 		}

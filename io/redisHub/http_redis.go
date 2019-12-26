@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-
 	"time"
 
 	"github.com/weaming/pingd"
@@ -21,15 +20,18 @@ type pingHTTP struct {
 	redisAddr string
 	redisDB   int
 	listKey   string
+	schemeMap map[string]func(startCh, stopCh chan<- pingd.HostStatus) error
 }
 
-func (p pingHTTP) HandlerProtocol(protocol string, fn func(chan<- pingd.HostStatus) error) {
+func (p pingHTTP) HandlerProtocol(scheme string, fn func(startCh, stopCh chan<- pingd.HostStatus) error) {
+	p.schemeMap[scheme] = fn
 }
 
 // ServeHTTP handles the incoming start/stop commands via HTTP
 func (p pingHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	host := r.URL.Path[1:]
 	if host == "" {
+		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, "missing host on request\n")
 		return
 	}
@@ -45,11 +47,24 @@ func (p pingHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "stop ping %s\n", host)
 		ioRedis.StopRedisHost(connKV, p.listKey, host, p.stopCh)
 	default:
-		err := checkDNS(host)
+		scheme, hostname, err := ParseSchemeHostname(host)
 		if err != nil {
+			log.Println(err)
+		}
+
+		err = checkDNS(hostname)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprint(w, err.Error())
 			return
 		}
+
+		if fn, ok := p.schemeMap[scheme]; ok {
+			fmt.Fprintf(w, "start handler %s with scheme %s\n", host, scheme)
+			fn(p.startCh, p.stopCh)
+			return
+		}
+
 		fmt.Fprintf(w, "start ping %s\n", host)
 		ioRedis.StartRedisHost(connKV, p.listKey, host, p.startCh)
 	}
@@ -71,7 +86,10 @@ func NewReceiverFunc(listen string, redisAddr string, redisDB int, startKey, sto
 		go redisReceiver(startCh, stopCh)
 
 		// http receiver
-		var p = &pingHTTP{startCh, stopCh, redisAddr, redisDB, listKey}
+		var p = &pingHTTP{
+			startCh, stopCh, redisAddr, redisDB, listKey,
+			map[string]func(startCh, stopCh chan<- pingd.HostStatus) error{},
+		}
 		log.Printf("Web server starting on %s", listen)
 		err := http.ListenAndServe(listen, p)
 		if err != nil {
