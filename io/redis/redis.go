@@ -34,6 +34,7 @@ func StartRedisHost(connKV redis.Conn, listKey, host string, startHostCh chan<- 
 	if err != nil {
 		log.Panicln(err)
 	}
+	connKV.Flush()
 	startHostCh <- pingd.HostStatus{Host: host, Down: down}
 }
 
@@ -43,6 +44,7 @@ func StopRedisHost(connKV redis.Conn, listKey, host string, stopHostCh chan<- pi
 	if err != nil {
 		log.Panicln(err)
 	}
+	connKV.Flush()
 	stopHostCh <- pingd.HostStatus{Host: host}
 }
 
