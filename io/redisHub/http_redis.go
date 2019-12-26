@@ -39,18 +39,17 @@ func (p pingHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := checkDNS(host)
-	if err != nil {
-		fmt.Fprint(w, err.Error())
-		return
-	}
-
 	connKV := ioRedis.NewRedisConn(p.redisAddr, p.redisDB, "servehttp")
 	switch r.Method {
 	case "DELETE":
 		fmt.Fprintf(w, "stop ping %s\n", host)
 		ioRedis.StopRedisHost(connKV, p.listKey, host, p.stopCh)
 	default:
+		err := checkDNS(host)
+		if err != nil {
+			fmt.Fprint(w, err.Error())
+			return
+		}
 		fmt.Fprintf(w, "start ping %s\n", host)
 		ioRedis.StartRedisHost(connKV, p.listKey, host, p.startCh)
 	}
