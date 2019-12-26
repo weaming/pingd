@@ -3,7 +3,7 @@ services:
   web:
     build: .
     ports:
-      - "80:8080"
+      - "127.0.0.1:8003:8080"
     depends_on:
       - redis
     command: ["/app/app", "-redis", "redis:6379"]
