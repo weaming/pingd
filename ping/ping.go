@@ -32,7 +32,7 @@ func Ping(host string) (up bool, err error) {
 		log.Fatal("skipping ping, root permissions missing")
 	}
 
-	log.Println("ping", host)
+	// log.Println("ping", host)
 	c, err := net.Dial("ip:icmp", host)
 	if err != nil {
 		return false, err
