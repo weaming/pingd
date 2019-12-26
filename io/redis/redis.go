@@ -126,6 +126,27 @@ func NewNotifierFunc(redisAddr string, redisDB int, upKey, downKey string) pingd
 	}
 }
 
+func LoadStatus(conn redis.Conn, redisKey string) []pingd.HostStatus {
+	hosts, err := redis.Strings(conn.Do("SMEMBERS", redisKey))
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	statuses := []pingd.HostStatus{}
+	for _, host := range hosts {
+		var down bool
+		status, err := redis.String(conn.Do("GET", "status-"+host))
+		if err != nil {
+			log.Println("ERROR loading status of " + host + ". Assuming UP")
+		}
+		if status == downStatus {
+			down = true
+		}
+		statuses = append(statuses, pingd.HostStatus{Host: host, Down: down})
+	}
+	return statuses
+}
+
 // NewLoaderFunc returns the function that loads back
 // hosts and last statuses from REDIS in case of reboot
 // send them to the startHostCh channel
@@ -133,32 +154,16 @@ func NewLoaderFunc(redisAddr string, redisDB int, listKey string) pingd.Loader {
 	return func(startHostCh chan<- pingd.HostStatus) {
 		log.Println("BOOT Loading hosts")
 		conn := NewRedisConn(redisAddr, redisDB, "load")
+		statuses := LoadStatus(conn, listKey)
 
-		hosts, err := redis.Strings(conn.Do("SMEMBERS", listKey))
-		if err != nil {
-			log.Panicln(err)
-		}
-
-		for _, host := range hosts {
-			var down bool
-
-			// Check for status
-			status, err := redis.String(conn.Do("GET", "status-"+host))
-			if err != nil {
-				log.Println("ERROR loading status of " + host + ". Assuming UP")
-			}
-			if status == downStatus {
-				down = true
-			}
-
+		for _, status := range statuses {
 			// load into process
-			startHostCh <- pingd.HostStatus{Host: host, Down: down}
-
+			startHostCh <- status
 			// slow a bit loading process
 			time.Sleep(time.Millisecond * 10)
 		}
 
-		log.Println("BOOT " + strconv.Itoa(len(hosts)) + " hosts loaded")
+		log.Println("BOOT " + strconv.Itoa(len(statuses)) + " hosts loaded")
 		log.Println("BOOT Ready")
 	}
 

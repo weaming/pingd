@@ -10,7 +10,6 @@ import (
 
 	"time"
 
-	"github.com/garyburd/redigo/redis"
 	"github.com/weaming/pingd"
 	ioRedis "github.com/weaming/pingd/io/redis"
 	"github.com/weaming/pingd/ping"
@@ -22,6 +21,9 @@ type pingHTTP struct {
 	redisAddr string
 	redisDB   int
 	listKey   string
+}
+
+func (p pingHTTP) HandlerProtocol(protocol string, fn func(chan<- pingd.HostStatus) error) {
 }
 
 // ServeHTTP handles the incoming start/stop commands via HTTP
@@ -57,24 +59,7 @@ func (p pingHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (p pingHTTP) serveStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	conn := ioRedis.NewRedisConn(p.redisAddr, p.redisDB, "status")
-
-	hosts, err := redis.Strings(conn.Do("SMEMBERS", p.listKey))
-	if err != nil {
-		log.Panicln(err)
-	}
-
-	statuses := []pingd.HostStatus{}
-	for _, host := range hosts {
-		var down bool
-		status, err := redis.String(conn.Do("GET", "status-"+host))
-		if err != nil {
-			log.Println("ERROR loading status of " + host + ". Assuming UP")
-		}
-		if status == downStatus {
-			down = true
-		}
-		statuses = append(statuses, pingd.HostStatus{Host: host, Down: down})
-	}
+	statuses := ioRedis.LoadStatus(conn, p.listKey)
 	json.NewEncoder(w).Encode(map[string]interface{}{"data": statuses})
 }
 
