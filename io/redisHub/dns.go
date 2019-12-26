@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strings"
 )
@@ -30,19 +29,7 @@ type DNSResponse struct {
 	} `json:"Answer"`
 }
 
-var dnsClient = NewHTTPClient(10)
-
-func ParseSchemeHostname(host string) (string, string, error) {
-	if strings.Contains(host, "://") {
-		u, err := url.Parse(host)
-		if err != nil {
-			log.Printf("parse url failed: %s\n", err)
-			return "", host, err
-		}
-		return u.Scheme, u.Hostname(), nil
-	}
-	return "", host, nil
-}
+var DoHClient = NewHTTPClient(10)
 
 func checkDNS(host string) error {
 	url := fmt.Sprintf("https://cloudflare-dns.com/dns-query?type=A&name=%s", host)
@@ -53,7 +40,7 @@ func checkDNS(host string) error {
 	}
 	req.Header.Set("Accept", "application/dns-json")
 
-	resp, err := dnsClient.Do(req)
+	resp, err := DoHClient.Do(req)
 	if err != nil {
 		return err
 	}

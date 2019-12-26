@@ -35,7 +35,7 @@ func main() {
 	pool := &pingd.Pool{
 		Interval:  interval,
 		FailLimit: failLimit,
-		Ping:      redisHub.Ping,
+		Ping:      redisHub.NewPingMap(ping.TimeOut).Ping,
 		Receive:   redisHub.NewReceiverFunc(listenAddr, redisAddr, redisDB, "pingStart", "pingStop", "pingHostList"),
 		Notify:    redisHub.NewNotifierFunc(redisAddr, redisDB, "up", "down", hubTopicPrefix),
 		Load:      redis.NewLoaderFunc(redisAddr, redisDB, "pingHostList"),
