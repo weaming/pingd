@@ -33,9 +33,9 @@ func main() {
 	flag.Parse()
 
 	var pool = &pingd.Pool{
-		Ping:      ping.Ping,
 		Interval:  interval,
 		FailLimit: failLimit,
+		Ping:      redisHub.Ping,
 		Receive:   redisHub.NewReceiverFunc(listenAddr, redisAddr, redisDB, "pingStart", "pingStop", "pingHostList"),
 		Notify:    redisHub.NewNotifierFunc(redisAddr, redisDB, "up", "down", hubTopicPrefix),
 		Load:      redis.NewLoaderFunc(redisAddr, redisDB, "pingHostList"),
