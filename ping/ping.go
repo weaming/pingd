@@ -14,7 +14,7 @@ import (
 )
 
 // Timeout sets the ping timeout in milliseconds
-var TimeOut = 5000 * time.Millisecond
+var TimeOut = 3000 * time.Millisecond
 
 // Ping sends a ping command to a given host, returns whether is host answers or not
 func Ping(host string) (up bool, err error) {
@@ -32,6 +32,7 @@ func Ping(host string) (up bool, err error) {
 		log.Fatal("skipping ping, root permissions missing")
 	}
 
+	log.Println("ping", host)
 	c, err := net.Dial("ip:icmp", host)
 	if err != nil {
 		return false, err
@@ -46,7 +47,7 @@ func Ping(host string) (up bool, err error) {
 		Code: 0,
 		Body: &icmpEcho{
 			ID: xid, Seq: xseq,
-			Data: []byte("ping.gg.ping.gg.ping.gg"),
+			Data: []byte("ping.drink.cafe ping.drink.cafe ping.drink.cafe"),
 		},
 	}).Marshal()
 

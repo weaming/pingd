@@ -53,7 +53,7 @@ func (m *Monitor) Start(interval time.Duration, failLimit int) {
 	defer ticker.Stop()
 
 	for _ = range ticker.C {
-		//		log.Println("tick")
+		// log.Println("tick")
 		m.lock.Lock()
 		if m.stop {
 			return
@@ -61,10 +61,10 @@ func (m *Monitor) Start(interval time.Duration, failLimit int) {
 		m.lock.Unlock()
 
 		if up, err := m.ping(m.host); up {
-			//			log.Println(m.host.Host + " pong")
+			// log.Println("pong " + m.host)
 			m.markUp()
 		} else {
-			//			log.Println(m.host.Host + " failed")
+			// log.Println("failed "+m.host, err)
 			m.markDown(err)
 		}
 	}
@@ -82,6 +82,7 @@ func (m *Monitor) Stop() {
 func (m *Monitor) markUp() {
 	m.lock.Lock()
 	defer m.lock.Unlock()
+
 	if !m.down {
 		m.failures = 0
 		return
