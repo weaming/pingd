@@ -10,9 +10,9 @@ import (
 // used as initial state when monitoring starts and a event
 // information when a host goes up or down.
 type HostStatus struct {
-	Host   string
-	Down   bool
-	Reason error
+	Host   string `json:"host"`
+	Down   bool   `json:"down"`
+	Reason error  `json:"reason"`
 }
 
 // Receiver is a functions which takes 2 channels of Host
