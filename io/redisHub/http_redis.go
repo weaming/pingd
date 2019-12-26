@@ -7,10 +7,11 @@ import (
 	"net/http"
 	"strings"
 
+	"time"
+
 	"github.com/weaming/pingd"
 	"github.com/weaming/pingd/io/redis"
 	"github.com/weaming/pingd/ping"
-	"time"
 )
 
 type pingHTTP struct {
@@ -26,6 +27,12 @@ func (p pingHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	host := r.URL.Path[1:]
 	if host == "" {
 		fmt.Fprint(w, "missing host on request\n")
+		return
+	}
+
+	err := checkDNS(host)
+	if err != nil {
+		fmt.Fprint(w, err.Error())
 		return
 	}
 
